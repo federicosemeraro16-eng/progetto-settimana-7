@@ -14,6 +14,7 @@ const lastEvent = document.querySelector('#last-event');
 
 
 
+
 class Team {
   constructor(_idTeam, _strBadge, _strTeam, _strLeague, _strCountry, _strSport) {
     this.strBadge = _strBadge;
@@ -34,6 +35,23 @@ class Match {
     this.intAwayScore = _intAwayScore;
   }
 }
+const FAVORITES_KEY = 'favorites-sportsHub';
+let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+
+// debounce 
+let debounceTimer;
+let searchController;
+
+
+searchTeamsInput.addEventListener('input', () => {
+
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    searchTeamsBtn.click()
+
+  }, 400)
+})
+
 
 const API_KEY = '123';
 const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${API_KEY}/`;
@@ -68,11 +86,17 @@ function clearAlert() {
 // function for upload teams
 
 async function searchTeams(query) {
+  if (searchController) {
+    searchController.abort();
+  }
+
+  searchController = new AbortController();
+
   clearAlert();
   showSpinner();
 
   try {
-    const response = await fetch(`${BASE_URL}searchteams.php?t=${query}`);
+    const response = await fetch(`${BASE_URL}searchteams.php?t=${query}`,{signal : searchController.signal});
     if (!response.ok) {
       throw new Error(`Errore HTTP ${response.status}`);
     }
@@ -88,7 +112,10 @@ async function searchTeams(query) {
   }
 
   catch (err) {
-    console.error(err);
+    if(err.name === 'AbortError'){
+      return null
+    }
+    console.error(err)
     showAlert('Errore nel caricamento dei dati, riprova più tardi ...');
     return []
   } finally {
@@ -99,16 +126,16 @@ async function searchTeams(query) {
 // function for manage the return async function and build a new Team under the class
 
 function toTeams(arrayRes) {
-  const newTeamSearched = arrayRes.map((item) => new Team(item.id, item.strBadge, item.strTeam, item.strLeague, item.strCountry, item.strSport));
-  
+  const newTeamSearched = arrayRes.map((item) => new Team(item.idTeam, item.strBadge, item.strTeam, item.strLeague, item.strCountry, item.strSport));
+
   return newTeamSearched
 }
 
 
 // function for build team card 
 
-function buildCard(team) {
-  resultsEmpty.textContent = '';
+function buildCard(team, isFavorite) {
+
   const cardColDiv = document.createElement('div');
   cardColDiv.classList.add('col-12', 'col-md-6', 'col-lg-4');
   const cardDiv = document.createElement('div');
@@ -132,12 +159,31 @@ function buildCard(team) {
   countryTeam.classList.add('text-muted', 'small', 'mb-0');
   countryTeam.textContent = team.strCountry;
   cardBodyDiv.appendChild(countryTeam);
-  const addPreferedBtn = document.createElement('button');
-  addPreferedBtn.textContent = 'Aggiungi ai preferiti';
-  addPreferedBtn.classList.add('btn', 'btn-warning', 'btn-sm', 'mt-3', 'w-100', 'text-dark', 'fw-bold');
-  cardBodyDiv.appendChild(addPreferedBtn);
+  const favoriteBtn = document.createElement('button');
+  favoriteBtn.classList.add('btn', 'btn-sm', 'mt-3', 'w-100', 'fw-bold')
+  if (isFavorite) {
+    favoriteBtn.textContent = '🗑 Rimuovi';
+    favoriteBtn.classList.add('btn-danger');
+  } else {
+    favoriteBtn.textContent = '★ Aggiungi ai preferiti';
+    favoriteBtn.classList.add('btn-warning', 'text-dark');
+  }
+  cardBodyDiv.appendChild(favoriteBtn);
   cardDiv.appendChild(cardBodyDiv);
   cardColDiv.appendChild(cardDiv);
+  cardDiv.addEventListener('click', () => showTeamsEvents(team));
+  favoriteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    if (isFavorite) {
+      removeFavorites(team.idTeam);
+    } else {
+      addFavorites(team);
+    }
+
+    renderFavorites();
+  });
+
   return cardColDiv
 }
 
@@ -155,6 +201,21 @@ function renderResults(teams) {
     resultsList.append(buildCard(team));
 
   });
+}
+
+// function for render favorites
+
+function renderFavorites() {
+  favoritesList.textContent = '';
+  if (favorites.length === 0) {
+    favoritesEmpty.classList.remove('d-none');
+    return
+  }
+  favoritesEmpty.classList.add('d-none');
+
+  favorites.forEach(favorite => {
+    favoritesList.append(buildCard(favorite, true))
+  })
 }
 
 // listener for searchBtn 
@@ -237,37 +298,97 @@ async function fetchLastEvents(idTeam) {
 //function for manage the results of the events fetch
 
 function toMatches(arrayMatches) {
-  const arrayMatchesResult = arrayMatches.map((item) => new Match(item.dateEvent,item.strEvent,item.intHomeScore,item.intAwayScore));
-  
+  const arrayMatchesResult = arrayMatches.map((item) => new Match(item.dateEvent, item.strEvent, item.intHomeScore, item.intAwayScore));
+
   return arrayMatchesResult
 }
 
 // function for build the match card 
 
-function buildEventItem(match){
+function buildEventItem(match) {
   const matchContainer = document.createElement('div');
-  matchContainer.classList.add('border-bottom','py-2');
+  matchContainer.classList.add('border-bottom', 'py-2');
   const dateMatchPar = document.createElement('p');
   dateMatchPar.textContent = match.dateEvent;
-  dateMatchPar.classList.add('small','text-muted','mb-1');
+  dateMatchPar.classList.add('small', 'text-muted', 'mb-1');
   matchContainer.appendChild(dateMatchPar);
   const resultContainer = document.createElement('div');
   resultContainer.classList.add('fw-bold');
   const resultPar = document.createElement('span');
   resultPar.textContent = match.strEvent;
   resultContainer.appendChild(resultPar);
-  if(match.intHomeScore !== null){
+  if (match.intHomeScore !== null) {
     const newSpanBadge = document.createElement('span');
-    newSpanBadge.classList.add('badge','bg-success','ms-2');
+    newSpanBadge.classList.add('badge', 'bg-success', 'ms-2');
     newSpanBadge.textContent = `${match.intHomeScore} – ${match.intAwayScore}`
     resultContainer.appendChild(newSpanBadge);
   }
-  
+
   matchContainer.appendChild(resultContainer);
   return matchContainer
 }
 
-const matches = toMatches(await fetchLastEvents(133604));
-lastEvent.append(buildEventItem(matches[0]));
-const nextMatches = toMatches(await fetchNextEvents(133604));
-nextEvent.append(buildEventItem(nextMatches[0]));
+// function for show the events
+
+function renderEvents(container, matches, emptyMessage) {
+  container.textContent = '';
+
+  if (matches.length === 0) {
+    const emptyPar = document.createElement('p');
+    emptyPar.classList.add('fst-italic', 'text-muted');
+    emptyPar.textContent = emptyMessage;
+    container.append(emptyPar);
+    return;
+  }
+
+  matches.forEach(match => {
+    container.append(buildEventItem(match));
+  });
+}
+
+// function for show team events 
+
+async function showTeamsEvents(team) {
+  eventsTeamName.textContent = team.strTeam;
+  eventsSection.classList.remove('d-none');
+  const [apiNext, apiLast] = await Promise.all([
+    fetchNextEvents(team.idTeam),
+    fetchLastEvents(team.idTeam),
+  ])
+
+
+
+  const nextMatches = toMatches(apiNext);
+  const lastMatches = toMatches(apiLast);
+
+  renderEvents(nextEvent, nextMatches, 'Nessun evento in programma');
+  renderEvents(lastEvent, lastMatches, 'Nessun risultato disponibile');
+}
+
+// function for saving
+
+function saveFavorites() {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+}
+
+// function for add favorites
+
+function addFavorites(team) {
+  if (favorites.some(f => f.idTeam === team.idTeam)) {
+    return
+  } else {
+    favorites.push(team)
+  }
+
+  saveFavorites();
+
+}
+
+// function for remove favorites
+
+function removeFavorites(idTeam) {
+  favorites = favorites.filter(f => f.idTeam !== idTeam);
+  saveFavorites();
+}
+
+
