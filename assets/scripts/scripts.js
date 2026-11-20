@@ -115,7 +115,7 @@ async function searchTeams(query) {
     if(err.name === 'AbortError'){
       return null
     }
-    console.error(err)
+    console.error(err);
     showAlert('Errore nel caricamento dei dati, riprova più tardi ...');
     return []
   } finally {
@@ -139,11 +139,11 @@ function buildCard(team, isFavorite) {
   const cardColDiv = document.createElement('div');
   cardColDiv.classList.add('col-12', 'col-md-6', 'col-lg-4');
   const cardDiv = document.createElement('div');
-  cardDiv.classList.add('card', 'h-100', 'text-center', 'border-0', 'shadow-sm');
+  cardDiv.classList.add('card', 'h-100', 'text-center', 'border-0', 'team-card');
   const imgTeam = document.createElement('img');
   imgTeam.setAttribute('src', team.strBadge);
   imgTeam.setAttribute('alt', team.strTeam);
-  imgTeam.classList.add('mx-auto', 'mt-3', 'img-fluid', 'w-25');
+  imgTeam.classList.add('mx-auto', 'mt-3', 'img-fluid', 'team-logo');
   cardDiv.appendChild(imgTeam);
   const cardBodyDiv = document.createElement('div');
   cardBodyDiv.classList.add('card-body');
