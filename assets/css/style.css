@@ -3,11 +3,11 @@
 }
 
 header {
-  background-color:var(--primary-color);
+  background-color: var(--primary-color);
 }
 
 #search-btn {
-  color:var(--primary-color);
+  color: var(--primary-color);
   cursor: pointer;
   width: 7rem;
   transition: backrgound-color 0.2s;
@@ -23,29 +23,38 @@ header {
 }
 
 .team-card {
-  box-shadow:0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  transition: transform 0.2s,box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.team-card:hover{
+.team-card:hover {
   transform: translateY(-2px);
   box-shadow: (0 6px 16px rgba(0, 0, 0, 0.15));
 }
 
-.team-logo{
+.team-logo {
   width: 70px;
   height: 70px;
   object-fit: contain;
 }
 
-.events-team-name{
-  color:var(--primary-color);
+.events-team-name {
+  color: var(--primary-color);
   font-weight: bold;
 }
 
-.events-title{
+.events-title {
   border-bottom: 2px solid var(--primary-color);
   padding-bottom: 8px;
   margin-bottom: 12px;
+}
+
+.event-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.event-item:hover {
+  background-color: #f8f9fa;
 }

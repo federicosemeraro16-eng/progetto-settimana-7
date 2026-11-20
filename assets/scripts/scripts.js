@@ -1,3 +1,5 @@
+import { API_KEY,BASE_URL, FAVORITES_KEY } from './config.js'; 
+
 const searchTeamsInput = document.querySelector('#search-teams');
 const searchTeamsBtn = document.querySelector('#search-btn');
 const spinner = document.querySelector('#spinner');
@@ -47,7 +49,7 @@ class Match {
 }
 
 
-const FAVORITES_KEY = 'favorites-sportsHub';
+
 let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
 let debounceTimer;
 let searchController;
@@ -64,8 +66,7 @@ searchTeamsInput.addEventListener('input', () => {
 })
 
 
-const API_KEY = '123';
-const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${API_KEY}/`;
+
 
 
 // function for Spinner management
@@ -375,6 +376,7 @@ function buildEventItem(match) {
 // function for modal
 
 function openEventModal(match) {
+  eventModalTitle.textContent = match.strEvent;
   eventModalBody.textContent = '';
   const modalDiv = document.createElement('div');
   modalDiv.classList.add('d-flex', 'justify-content-center', 'align-items-center', 'gap-3', 'mb-3');
