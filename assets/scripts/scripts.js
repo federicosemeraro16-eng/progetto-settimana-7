@@ -11,6 +11,9 @@ const eventsTeamName = document.querySelector('#events-team-name');
 const nextEvent = document.querySelector('#next-event');
 const lastEvent = document.querySelector('#last-event');
 const selectSport = document.querySelector('#select-sport');
+const eventModalTitle = document.querySelector('#event-modal-title');
+const eventModalBody = document.querySelector('#event-modal-body');
+const eventModal = new bootstrap.Modal(document.querySelector('#event-modal'));
 
 
 
@@ -29,11 +32,17 @@ class Team {
 }
 
 class Match {
-  constructor(_dateEvent, _strEvent, _intHomeScore, _intAwayScore) {
+  constructor(_dateEvent, _strEvent, _intHomeScore, _intAwayScore, _strLeague, _intRound, _strTime, _strVenue, _strHomeTeamBadge, _strAwayTeamBadge) {
     this.dateEvent = _dateEvent;
     this.strEvent = _strEvent;
     this.intHomeScore = _intHomeScore;
     this.intAwayScore = _intAwayScore;
+    this.strLeague = _strLeague;
+    this.intRound = _intRound;
+    this.strTime = _strTime;
+    this.strVenue = _strVenue;
+    this.strHomeTeamBadge = _strHomeTeamBadge;
+    this.strAwayTeamBadge = _strAwayTeamBadge;
   }
 }
 
@@ -207,12 +216,12 @@ function renderResults(teams) {
 
 //function for filter for category sport
 
-function applySportFilter(){
+function applySportFilter() {
   const sportChosen = selectSport.value;
-  if(sportChosen ==='all'){
+  if (sportChosen === 'all') {
 
     renderResults(currentResults);
-  }else{
+  } else {
     const sportArrayChosen = currentResults.filter((item) => item.strSport === sportChosen);
     renderResults(sportArrayChosen);
   }
@@ -240,11 +249,15 @@ searchTeamsBtn.addEventListener('click', async (e) => {
   const query = searchTeamsInput.value.trim();
   if (!query) {
     showAlert('Scrivi il nome della tua squadra');
+    currentResults = [];
     renderResults([]);
     return
   }
 
   const data = await searchTeams(query);
+  if (data === null) {
+    return
+  }
   const teams = toTeams(data);
   currentResults = teams;
   applySportFilter();
@@ -252,7 +265,7 @@ searchTeamsBtn.addEventListener('click', async (e) => {
 
 // listener sulla select
 
-selectSport.addEventListener('change',()=>{
+selectSport.addEventListener('change', () => {
   applySportFilter()
 })
 
@@ -323,7 +336,7 @@ async function fetchLastEvents(idTeam) {
 //function for manage the results of the events fetch
 
 function toMatches(arrayMatches) {
-  const arrayMatchesResult = arrayMatches.map((item) => new Match(item.dateEvent, item.strEvent, item.intHomeScore, item.intAwayScore));
+  const arrayMatchesResult = arrayMatches.map((item) => new Match(item.dateEvent, item.strEvent, item.intHomeScore, item.intAwayScore, item.strLeague, item.intRound, item.strTime, item.strVenue, item.strHomeTeamBadge, item.strAwayTeamBadge));
 
   return arrayMatchesResult
 }
@@ -354,7 +367,50 @@ function buildEventItem(match) {
   }
 
   matchContainer.appendChild(resultContainer);
+  matchContainer.classList.add('event-item','border-bottom','py-2','px-2');
+  matchContainer.addEventListener('click', () => openEventModal(match));
   return matchContainer
+}
+
+// function for modal
+
+function openEventModal(match) {
+  eventModalBody.textContent = '';
+  const modalDiv = document.createElement('div');
+  modalDiv.classList.add('d-flex', 'justify-content-center', 'align-items-center', 'gap-3', 'mb-3');
+  const homeBadgeTeam = document.createElement('img');
+  homeBadgeTeam.setAttribute('src', match.strHomeTeamBadge);
+  homeBadgeTeam.setAttribute('alt', 'badge squadra di casa');
+  homeBadgeTeam.setAttribute('width', '60');
+  modalDiv.appendChild(homeBadgeTeam);
+  const resultSpan = document.createElement('span');
+  if (match.intHomeScore !== null) {
+    resultSpan.textContent = `${match.intHomeScore} – ${match.intAwayScore}`;
+  } else {
+    resultSpan.textContent = 'vs'
+  }
+  modalDiv.appendChild(resultSpan);
+  const awayBadgeTeam = document.createElement('img');
+  awayBadgeTeam.setAttribute('width', '60')
+  awayBadgeTeam.setAttribute('src', match.strAwayTeamBadge);
+  awayBadgeTeam.setAttribute('alt', 'badge squadra ospite');
+  modalDiv.appendChild(awayBadgeTeam);
+  eventModalBody.appendChild(modalDiv);
+  const leaguePar = document.createElement('p');
+  leaguePar.textContent = `Campionato : ${match.strLeague}`;
+  eventModalBody.appendChild(leaguePar);
+  const matchRound = document.createElement('p');
+  matchRound.textContent = `Giornata : ${match.intRound}`;
+  eventModalBody.appendChild(matchRound);
+  const matchDay = document.createElement('p');
+  const dateText = match.dateEvent ? match.dateEvent.toLocaleDateString('it-IT') : 'Non disponibile';
+  const timeText = match.strTime ? match.strTime.slice(0, 5) : 'Da Definire';
+  matchDay.textContent = `Data : ${dateText}, ore: ${timeText}`;
+  eventModalBody.appendChild(matchDay);
+  const stadium = document.createElement('p');
+  stadium.textContent = `Stadio : ${match.strVenue || 'Non disponibile'}`;
+  eventModalBody.appendChild(stadium);
+  eventModal.show();
 }
 
 // function for show the events
@@ -430,4 +486,6 @@ function dateReviver(key, value) {
 }
 
 renderFavorites();
+
+
 
