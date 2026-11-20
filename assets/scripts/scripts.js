@@ -96,7 +96,7 @@ async function searchTeams(query) {
   showSpinner();
 
   try {
-    const response = await fetch(`${BASE_URL}searchteams.php?t=${query}`,{signal : searchController.signal});
+    const response = await fetch(`${BASE_URL}searchteams.php?t=${query}`, { signal: searchController.signal });
     if (!response.ok) {
       throw new Error(`Errore HTTP ${response.status}`);
     }
@@ -112,7 +112,7 @@ async function searchTeams(query) {
   }
 
   catch (err) {
-    if(err.name === 'AbortError'){
+    if (err.name === 'AbortError') {
       return null
     }
     console.error(err);
@@ -244,7 +244,8 @@ async function fetchNextEvents(idTeam) {
     if (!response.ok) {
       throw new Error(`Errore HTTP ${response.status}`);
     }
-    const data = await response.json();
+    const text = await response.text()
+    const data = JSON.parse(text, dateReviver);
     if (data.events === null) {
       return []
     } else {
@@ -275,7 +276,8 @@ async function fetchLastEvents(idTeam) {
     if (!response.ok) {
       throw new Error(`Errore HTTP ${response.status}`);
     }
-    const data = await response.json();
+    const text = await response.text();
+    const data = JSON.parse(text, dateReviver);
     if (data.results === null) {
       return []
     } else {
@@ -309,7 +311,11 @@ function buildEventItem(match) {
   const matchContainer = document.createElement('div');
   matchContainer.classList.add('border-bottom', 'py-2');
   const dateMatchPar = document.createElement('p');
-  dateMatchPar.textContent = match.dateEvent;
+  if (match.dateEvent) {
+    dateMatchPar.textContent = match.dateEvent.toLocaleDateString('it-IT');
+  } else {
+    dateMatchPar.textContent = `Data da definire ...`
+  }
   dateMatchPar.classList.add('small', 'text-muted', 'mb-1');
   matchContainer.appendChild(dateMatchPar);
   const resultContainer = document.createElement('div');
@@ -360,6 +366,8 @@ async function showTeamsEvents(team) {
 
   const nextMatches = toMatches(apiNext);
   const lastMatches = toMatches(apiLast);
+  nextMatches.sort((a, b) => a.dateEvent - b.dateEvent);
+  lastMatches.sort((a, b) => b.dateEvent - a.dateEvent);
 
   renderEvents(nextEvent, nextMatches, 'Nessun evento in programma');
   renderEvents(lastEvent, lastMatches, 'Nessun risultato disponibile');
@@ -389,6 +397,13 @@ function addFavorites(team) {
 function removeFavorites(idTeam) {
   favorites = favorites.filter(f => f.idTeam !== idTeam);
   saveFavorites();
+}
+
+function dateReviver(key, value) {
+  if (key === 'dateEvent' && value !== null) {
+    return new Date(value)
+  }
+  return value
 }
 
 
