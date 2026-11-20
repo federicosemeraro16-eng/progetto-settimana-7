@@ -10,6 +10,7 @@ const eventsSection = document.querySelector('#events-section');
 const eventsTeamName = document.querySelector('#events-team-name');
 const nextEvent = document.querySelector('#next-event');
 const lastEvent = document.querySelector('#last-event');
+const selectSport = document.querySelector('#select-sport');
 
 
 
@@ -35,12 +36,13 @@ class Match {
     this.intAwayScore = _intAwayScore;
   }
 }
+
+
 const FAVORITES_KEY = 'favorites-sportsHub';
 let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
-
-// debounce 
 let debounceTimer;
 let searchController;
+let currentResults = [];
 
 
 searchTeamsInput.addEventListener('input', () => {
@@ -203,6 +205,20 @@ function renderResults(teams) {
   });
 }
 
+//function for filter for category sport
+
+function applySportFilter(){
+  const sportChosen = selectSport.value;
+  if(sportChosen ==='all'){
+
+    renderResults(currentResults);
+  }else{
+    const sportArrayChosen = currentResults.filter((item) => item.strSport === sportChosen);
+    renderResults(sportArrayChosen);
+  }
+
+}
+
 // function for render favorites
 
 function renderFavorites() {
@@ -230,7 +246,14 @@ searchTeamsBtn.addEventListener('click', async (e) => {
 
   const data = await searchTeams(query);
   const teams = toTeams(data);
-  renderResults(teams);
+  currentResults = teams;
+  applySportFilter();
+})
+
+// listener sulla select
+
+selectSport.addEventListener('change',()=>{
+  applySportFilter()
 })
 
 // fetch function for next events
@@ -406,4 +429,5 @@ function dateReviver(key, value) {
   return value
 }
 
+renderFavorites();
 
