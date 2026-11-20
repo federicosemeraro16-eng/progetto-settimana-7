@@ -1,11 +1,70 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Progetto - Settimana 7</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="assets/css/style.css" />
+  <script type="module" src="assets/scripts/scripts.js"></script>
 </head>
-<body>
-  
+
+<body class="bg-light">
+
+  <header class="header-sports-hub text-light">
+    <div class="container-fluid text-center pt-5 pb-4 px-4">
+
+      <h1 class="fw-bold">SportsHub</h1>
+      <p class="lead">Cerca una squadra, scopri prossime partite ed ultimi risultati</p>
+
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="input-group">
+            <input type="text" class="form-control rounded me-2" id="search-teams" placeholder="Es:Arsenal..."
+              aria-label="Cerca Squadra" />
+            <button class="btn rounded btn-light" id="search-btn">Cerca</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container py-2">
+      <div class="text-center d-none" id="spinner">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Caricamento...</span></div>
+      </div>
+
+      <div id="alert"></div>
+
+      <section class="mt-4" id="preferred-teams">
+        <h2>Le tue squadre preferite</h2>
+        <p class="fst-italic mt-3" id="prefered-par">Non hai ancora salvato nessuna squadra. Cercane una qui sopra e
+          aggiungila ai preferiti</p>
+        <div class="row g-3" id="favourite-list">
+
+        </div>
+      </section>
+
+      <section class="mt-2" id="teams-founded">
+
+        <h2>Squadre trovate</h2>
+        <p>Iniza cercando una squadra qui sopra</p>
+      </section>
+
+    </div>
+  </main>
+
+
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-WyOxWvTyr1QaMPfiPJSv76iReVthorl5uWlFtZPyK0IEB0hGzo9y5Bp9mYanr8Bu"
+    crossorigin="anonymous"></script>
 </body>
+
 </html>
